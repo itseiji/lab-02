@@ -1,5 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+html {
+    scroll-behavior: smooth;
+}
 
-#desc{
-    font-family: "Rajdhani", sans-serif;
-} 
+.hero-gradient {
+    /* Custom mesh-style background to match image */
+    background-color: #f8fafc;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%);
+    position: relative;
+}
+
+/* Texture overlay effect */
+.hero-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Custom Table scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+.nav-icon {
+  /* Standard UI icon sizing */
+  height: 40px; 
+  width: auto;
+  
+  /* Ensures the logo doesn't look blurry */
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  
+  /* UI Interaction */
+  transition: opacity 0.2s ease-in-out;
+}
+
+.nav-icon:hover {
+  opacity: 0.8;
+}
+
+/* Mobile Adjustment: Slightly smaller for cramped headers */
+@media (max-width: 480px) {
+  .nav-icon {
+    height: 32px;
+  }
+}

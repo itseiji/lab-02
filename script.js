@@ -1,69 +1,101 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const contactForm = document.getElementById('contactForm');
-    const formMessage = document.getElementById('form-message');
+document.addEventListener("DOMContentLoaded", function () {
+    const contactForm = document.getElementById("contactForm");
+    const submissionTable = document.getElementById("submissionTable");
+    const emptyState = document.getElementById("emptyState");
 
-    const logToConsole = (data) => {
-        console.log("New Submission Received:");
-        console.table(data);
-    };
+    // Load submissions when page loads
+    renderSubmissions();
 
-    const saveToLocalStorage = (data) => {
-        const existingSubmissions = JSON.parse(localStorage.getItem('contact_submissions')) || [];
+    // FORM SUBMIT
+    contactForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const newEntry = {
+            name: document.getElementById("name").value,
+            contact: document.getElementById("contactNo").value,
+            email: document.getElementById("email").value,
+            message: document.getElementById("message").value,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        };
+
+        const storedData = JSON.parse(localStorage.getItem("portfolioMessages")) || [];
+        storedData.push(newEntry);
+        localStorage.setItem("portfolioMessages", JSON.stringify(storedData));
+
+        // UI Feedback: Reset form and refresh table
+        contactForm.reset();
+        renderSubmissions();
         
-        const submissionWithDate = { ...data, submittedAt: new Date().toLocaleString() };
-        
-        existingSubmissions.push(submissionWithDate);
-        
-        localStorage.setItem('contact_submissions', JSON.stringify(existingSubmissions));
-        
-        console.log(`Stored! Total submissions: ${existingSubmissions.length}`);
-    };
+        // Optional: Trigger a simple success alert or animation here
+    });
 
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    // RENDER FUNCTION (Optimized for Web & Mobile UI)
+    function renderSubmissions() {
+        const storedData = JSON.parse(localStorage.getItem("portfolioMessages")) || [];
+        submissionTable.innerHTML = "";
 
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            saveToLocalStorage(data);
-
-            if (formMessage) {
-                formMessage.textContent = `Submission saved successfully!`;
-                formMessage.classList.remove('opacity-0');
-                formMessage.classList.add('opacity-100', 'bg-blue-100', 'text-blue-800', 'text-center');
-                
-                setTimeout(() => formMessage.classList.replace('opacity-100', 'opacity-0'), 3000);
-            }
-
-            this.reset();
-        });
-    }
-
-    function viewSubmissions() {
-        const list = document.getElementById('submissionsTableBody');
-        const data = JSON.parse(localStorage.getItem('contact_submissions')) || [];
-
-        if (data.length === 0) {
-            const empty = document.getElementById('empty-state');
-            if (empty) empty.classList.remove('hidden');
+        if (storedData.length === 0) {
+            emptyState.classList.remove("hidden");
             return;
         }
 
-        list.innerHTML = data.reverse().map(entry => `
-            <tr class="border-b border-gray-100">
-                <td class="px-6 py-4 text-xs font-mono text-gray-400">${entry.submittedAt}</td>
-                <td class="px-6 py-4 font-bold text-gray-800">${entry.name}</td>
-                <td class="px-6 py-4 text-blue-600">${entry.contact}</td>
-                <td class="px-6 py-4 text-blue-600">${entry.email}</td>
-                <td class="px-6 py-4 text-gray-600">${entry.message}</td>
-            </tr>
-        `).join('');
+        emptyState.classList.add("hidden");
+
+        // Show newest first for better User Experience (UX)
+        storedData.slice().reverse().forEach((data, index) => {
+            const originalIndex = storedData.length - 1 - index;
+            const initials = data.name.charAt(0).toUpperCase();
+
+            const row = `
+                <tr class="hover:bg-blue-50/40 transition-all duration-200 border-b border-gray-50 last:border-0 group">
+                    
+                    <td class="px-4 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="hidden sm:flex w-9 h-9 rounded-full bg-blue-600 text-white items-center justify-center font-bold text-xs shadow-sm">
+                                ${initials}
+                            </div>
+                            <div class="flex flex-col">
+                                <div class="font-bold text-slate-800 text-sm">${data.name}</div>
+                                <div class="text-[11px] text-gray-400 flex flex-col sm:flex-row sm:gap-2">
+                                    <span>${data.email}</span>
+                                    <span class="hidden sm:inline text-gray-200">|</span>
+                                    <span>${data.contact}</span>
+                                </div>
+                                <div class="text-[10px] text-gray-300 mt-1 uppercase tracking-tighter font-medium">${data.date}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="px-4 py-4 text-sm text-gray-600">
+                        <p class="max-w-xs line-clamp-2 md:line-clamp-1 leading-relaxed">
+                            ${data.message}
+                        </p>
+                    </td>
+
+                    <td class="px-4 py-4 text-right">
+                        <button onclick="deleteEntry(${originalIndex})"
+                            class="text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all p-2 rounded-lg"
+                            aria-label="Delete Submission"
+                            title="Delete Entry">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </td>
+
+                </tr>
+            `;
+
+            submissionTable.insertAdjacentHTML("beforeend", row);
+        });
     }
 
-    const submissionsList = document.getElementById('submissionsTableBody');
-
-    if (submissionsList) {
-        viewSubmissions();
-    }
+    // DELETE FUNCTION
+    window.deleteEntry = function (index) {
+        // Confirmation is good UX to prevent accidental deletes
+        if(confirm("Are you sure you want to delete this UI inquiry?")) {
+            const storedData = JSON.parse(localStorage.getItem("portfolioMessages")) || [];
+            storedData.splice(index, 1);
+            localStorage.setItem("portfolioMessages", JSON.stringify(storedData));
+            renderSubmissions();
+        }
+    };
 });
